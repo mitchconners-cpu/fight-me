@@ -6,3 +6,41 @@ __pycache__/
 .DS_Store
 static/gateway_app.py.bak
 .env
+
+# ===== Local secrets =====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets/
+credentials/
+
+# ===== Python =====
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+
+# ===== Local databases =====
+*.db
+*.sqlite
+*.sqlite3
+
+# ===== Logs =====
+*.log
+logs/
+
+# ===== OS / editor files =====
+.DS_Store
+.vscode/
+.idea/
+
+# ===== Temporary files =====
+*.tmp
+*.temp
+*.swp
+*.swo
