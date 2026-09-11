@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTC Wager Console</title>
+<style>
+  :root {
+    --bg: #0b0e11;
+    --panel: #161a1f;
+    --border: #2a2f36;
+    --text: #e6e9ee;
+    --muted: #8b94a3;
+    --accent: #f2a900; /* bitcoin orange */
+    --danger: #e5484d;
+    --ok: #3ecf8e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    margin: 0;
+    padding: 2rem 1rem;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; margin-bottom: 0.25rem; }
+  .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .panel h2 { font-size: 1rem; margin: 0 0 0.75rem; color: var(--accent); }
+  label { display: block; font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0.25rem; }
+  input, select, textarea {
+    width: 100%;
+    background: #0f1216;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.55rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+  button {
+    background: var(--accent);
+    color: #111;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+  }
+  button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status-line { font-size: 0.8rem; margin-top: 0.5rem; }
+  .status-ok { color: var(--ok); }
+  .status-bad { color: var(--danger); }
+  .bet-row {
+    border-bottom: 1px solid var(--border);
+    padding: 0.6rem 0;
+    font-size: 0.85rem;
+  }
+  .bet-row:last-child { border-bottom: none; }
+  .bet-id { color: var(--accent); font-family: monospace; }
+  .tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    background: #22262d;
+    color: var(--muted);
+    margin-left: 0.4rem;
+  }
+  .hidden { display: none; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>&#8383; BTC Wager Console</h1>
+  <div class="sub">Your BTC address is your identity across web and SMS.</div>
+
+  <!-- LOGIN -->
+  <div class="panel" id="login-panel">
+    <h2>1. Sign in with your BTC address</h2>
+    <label for="btc-address">BTC Address</label>
+    <input id="btc-address" placeholder="bc1q..." autocomplete="off">
+    <button onclick="login()">Sign In</button>
+    <div id="login-status" class="status-line"></div>
+  </div>
+
+  <!-- FEE / ACCESS -->
+  <div class="panel hidden" id="fee-panel">
+    <h2>2. Activate your account</h2>
+    <div id="fee-copy" class="sub"></div>
+    <button onclick="confirmFee()">I've sent the fee &mdash; check now</button>
+    <div id="fee-status" class="status-line"></div>
+  </div>
+
+  <!-- CREATE BET -->
+  <div class="panel hidden" id="create-panel">
+    <h2>Create a Wager</h2>
+    <label for="terms">Terms</label>
+    <textarea id="terms" rows="2" placeholder="e.g. Seahawks beat the Broncos on Sunday"></textarea>
+    <div class="grid2">
+      <div>
+        <label for="amount">Amount</label>
+        <input id="amount" type="number" step="any" placeholder="50">
+      </div>
+      <div>
+        <label for="currency">Currency</label>
+        <select id="currency">
+          <option value="USD">USD (cash)</option>
+          <option value="BTC">BTC</option>
+          <option value="SATS">SATS</option>
+        </select>
+      </div>
+    </div>
+    <label for="payout">Payout address (defaults to your login address)</label>
+    <input id="payout" placeholder="bc1q...">
+    <button onclick="createBet()">Launch Wager</button>
+    <div id="create-status" class="status-line"></div>
+  </div>
+
+  <!-- JOIN BET -->
+  <div class="panel hidden" id="join-panel">
+    <h2>Join a Wager</h2>
+    <div class="grid2">
+      <div>
+        <label for="join-bet-id">Bet ID</label>
+        <input id="join-bet-id" placeholder="BET-XXXXXXXX">
+      </div>
+      <div>
+        <label for="join-payout">Your payout address</label>
+        <input id="join-payout" placeholder="bc1q...">
+      </div>
+    </div>
+    <button onclick="joinBet()">Join</button>
+    <div id="join-status" class="status-line"></div>
+  </div>
+
+  <!-- MY BETS -->
+  <div class="panel hidden" id="mine-panel">
+    <h2>My Wagers</h2>
+    <button class="secondary" onclick="loadMyBets()">Refresh</button>
+    <div id="mine-list"></div>
+  </div>
+
+  <!-- OPEN BETS -->
+  <div class="panel">
+    <h2>Open Wagers</h2>
+    <button class="secondary" onclick="loadOpenBets()">Refresh</button>
+    <div id="open-list"></div>
+  </div>
+
+  <!-- VOTE / RESOLVE -->
+  <div class="panel hidden" id="vote-panel">
+    <h2>Vote / Resolve</h2>
+    <div class="grid2">
+      <div>
+        <label for="vote-bet-id">Bet ID</label>
+        <input id="vote-bet-id" placeholder="BET-XXXXXXXX">
+      </div>
+      <div>
+        <label for="vote-winner">Winner's user_token</label>
+        <input id="vote-winner" placeholder="the winner's token">
+      </div>
+    </div>
+    <button onclick="voteBet()">Submit Vote</button>
+    <div id="vote-status" class="status-line"></div>
+    <div class="sub" style="margin-top:0.5rem;">
+      If both participants' votes agree, the wager resolves immediately.
+      If they conflict, it's flagged DISPUTED and requires 3 community
+      approvals via the SMS <code>APPROVE</code> command or your admin tooling.
+    </div>
+  </div>
+</div>
+
+<script>
+const API = ""; // same-origin
+let currentAddress = null;
+
+function setStatus(id, msg, ok) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = "status-line " + (ok ? "status-ok" : "status-bad");
+}
+
+async function login() {
+  const addr = document.getElementById("btc-address").value.trim();
+  if (!addr) { setStatus("login-status", "Enter a BTC address.", false); return; }
+
+  try {
+    const res = await fetch(`${API}/api/auth/btc-login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ btc_address: addr })
+    });
+    const data = await res.json();
+    if (!res.ok) { setStatus("login-status", data.detail || "Login failed.", false); return; }
+
+    currentAddress = addr;
+    document.getElementById("payout").value = addr;
+    setStatus("login-status", `Signed in as ${addr.slice(0, 10)}...`, true);
+
+    document.getElementById("fee-panel").classList.remove("hidden");
+    document.getElementById("mine-panel").classList.remove("hidden");
+    document.getElementById("vote-panel").classList.remove("hidden");
+
+    if (data.access_granted) {
+      unlockBetting();
+      document.getElementById("fee-copy").textContent = "Account active. You can create and join wagers.";
+    } else {
+      document.getElementById("fee-copy").textContent =
+        `Send ${data.required_fee_sats} sats to ${data.fee_deposit_address} to activate betting, then confirm below.`;
+    }
+
+    loadMyBets();
+  } catch (e) {
+    setStatus("login-status", "Network error contacting server.", false);
+  }
+}
+
+function unlockBetting() {
+  document.getElementById("create-panel").classList.remove("hidden");
+  document.getElementById("join-panel").classList.remove("hidden");
+}
+
+async function confirmFee() {
+  if (!currentAddress) return;
+  try {
+    const res = await fetch(`${API}/api/auth/confirm-fee`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ btc_address: currentAddress })
+    });
+    const data = await res.json();
+    if (data.status === "success") {
+      setStatus("fee-status", "Activated! You can now create and join wagers.", true);
+      unlockBetting();
+    } else {
+      setStatus("fee-status", data.message || "Payment not detected yet.", false);
+    }
+  } catch (e) {
+    setStatus("fee-status", "Network error checking fee status.", false);
+  }
+}
+
+async function createBet() {
+  if (!currentAddress) return;
+  const terms = document.getElementById("terms").value.trim();
+  const amount = parseFloat(document.getElementById("amount").value);
+  const currency = document.getElementById("currency").value;
+  const payout = document.getElementById("payout").value.trim() || currentAddress;
+
+  if (!terms || !amount) { setStatus("create-status", "Fill in terms and amount.", false); return; }
+
+  try {
+    const res = await fetch(`${API}/api/bets/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        creator_identifier: currentAddress,
+        terms, wager_amount: amount, currency, payout_address: payout
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) { setStatus("create-status", data.detail || "Could not create wager.", false); return; }
+    setStatus("create-status", `Created ${data.bet_id}. Escrow: ${data.escrow_address}`, true);
+    loadOpenBets();
+    loadMyBets();
+  } catch (e) {
+    setStatus("create-status", "Network error creating wager.", false);
+  }
+}
+
+async function joinBet() {
+  if (!currentAddress) return;
+  const betId = document.getElementById("join-bet-id").value.trim().toUpperCase();
+  const payout = document.getElementById("join-payout").value.trim() || currentAddress;
+
+  if (!betId) { setStatus("join-status", "Enter a bet ID.", false); return; }
+
+  try {
+    const res = await fetch(`${API}/api/bets/join`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bet_id: betId, opponent_identifier: currentAddress, payout_address: payout })
+    });
+    const data = await res.json();
+    if (!res.ok) { setStatus("join-status", data.detail || "Could not join wager.", false); return; }
+    setStatus("join-status", data.message, true);
+    loadOpenBets();
+    loadMyBets();
+  } catch (e) {
+    setStatus("join-status", "Network error joining wager.", false);
+  }
+}
+
+async function voteBet() {
+  if (!currentAddress) return;
+  const betId = document.getElementById("vote-bet-id").value.trim().toUpperCase();
+  const winner = document.getElementById("vote-winner").value.trim();
+
+  if (!betId || !winner) { setStatus("vote-status", "Enter bet ID and winner token.", false); return; }
+
+  try {
+    const res = await fetch(`${API}/api/bets/vote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bet_id: betId, voter_identifier: currentAddress, voted_winner_token: winner })
+    });
+    const data = await res.json();
+    if (!res.ok) { setStatus("vote-status", data.detail || "Vote failed.", false); return; }
+    setStatus("vote-status", data.message, true);
+    loadMyBets();
+  } catch (e) {
+    setStatus("vote-status", "Network error submitting vote.", false);
+  }
+}
+
+async function loadOpenBets() {
+  try {
+    const res = await fetch(`${API}/api/bets/list`);
+    const data = await res.json();
+    const list = document.getElementById("open-list");
+    const open = (data.bets || []).filter(b => b.status === "PENDING_ACCEPTANCE");
+    list.innerHTML = open.length ? "" : '<div class="sub">No open wagers.</div>';
+    open.forEach(b => {
+      const row = document.createElement("div");
+      row.className = "bet-row";
+      row.innerHTML = `<span class="bet-id">${b.bet_id}</span> — ${b.wager_amount} ${b.currency} — ${escapeHtml(b.terms)} <span class="tag">${b.status}</span>`;
+      list.appendChild(row);
+    });
+  } catch (e) { /* silent */ }
+}
+
+async function loadMyBets() {
+  if (!currentAddress) return;
+  try {
+    const res = await fetch(`${API}/api/bets/mine?btc_address=${encodeURIComponent(currentAddress)}`);
+    const data = await res.json();
+    const list = document.getElementById("mine-list");
+    list.innerHTML = (data.bets || []).length ? "" : '<div class="sub">No wagers yet.</div>';
+    (data.bets || []).forEach(b => {
+      const row = document.createElement("div");
+      row.className = "bet-row";
+      row.innerHTML = `<span class="bet-id">${b.bet_id}</span> — ${escapeHtml(b.terms)} <span class="tag">${b.status}</span>`;
+      list.appendChild(row);
+    });
+  } catch (e) { /* silent */ }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+loadOpenBets();
+</script>
+</body>
+</html>

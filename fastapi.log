@@ -1,0 +1,13 @@
+INFO:     Started server process [94461]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+[SYSTEM LOG] Communication Stack, Database Engine & SMS Gateway Ready.
+INFO:     74.201.177.50:0 - "GET / HTTP/1.1" 200 OK
+INFO:     74.201.177.50:0 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     74.201.177.50:0 - "GET / HTTP/1.1" 200 OK
+INFO:     74.201.177.50:0 - "GET / HTTP/1.1" 200 OK
+INFO:     74.201.177.50:0 - "GET / HTTP/1.1" 200 OK
+ation shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [86309]

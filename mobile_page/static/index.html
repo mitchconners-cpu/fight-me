@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Account</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  body { font-family: -apple-system, sans-serif; margin: 0; padding: 24px 16px;
+    background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #111); }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .sub { color: var(--tg-theme-hint-color, #888); font-size: 14px; margin-bottom: 24px; }
+  .card { background: var(--tg-theme-secondary-bg-color, #f2f2f2); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(128,128,128,0.15); font-size: 14px; }
+  .row:last-child { border-bottom: none; }
+  .label { color: var(--tg-theme-hint-color, #888); }
+  .value { font-weight: 600; word-break: break-all; text-align: right; margin-left: 12px; }
+  input { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 10px; border: 1px solid rgba(128,128,128,0.3); font-size: 16px; margin-bottom: 12px; }
+  button { width: 100%; padding: 12px; border-radius: 10px; border: none; font-size: 16px; font-weight: 600;
+    background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff); }
+  .empty { text-align: center; color: var(--tg-theme-hint-color, #888); padding: 24px 0; font-size: 14px; }
+</style>
+</head>
+<body>
+  <h1>My Account</h1>
+  <div class="sub">Check or link your account identifier</div>
+  <div class="card">
+    <input id="idInput" type="text" placeholder="Enter your account identifier" />
+    <button id="checkBtn">Check status</button>
+  </div>
+  <div id="resultCard" class="card" style="display:none;">
+    <div class="row"><span class="label">Linked ID</span><span class="value" id="idValue"></span></div>
+    <div class="row"><span class="label">Linked since</span><span class="value" id="createdValue"></span></div>
+    <div class="row"><span class="label">Last seen</span><span class="value" id="seenValue"></span></div>
+  </div>
+  <div id="emptyState" class="empty" style="display:none;"></div>
+<script>
+  const tg = window.Telegram ? window.Telegram.WebApp : null;
+  if (tg) { tg.ready(); tg.expand(); }
+  const input = document.getElementById('idInput');
+  if (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) input.value = tg.initDataUnsafe.start_param;
+
+  async function checkStatus() {
+    const id = input.value.trim();
+    if (!id) return;
+    document.getElementById('resultCard').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+    try {
+      const res = await fetch(`/api/identity/status?external_id=${encodeURIComponent(id)}`);
+      if (res.status === 404) {
+        document.getElementById('emptyState').textContent = 'No account linked yet.';
+        document.getElementById('emptyState').style.display = 'block';
+      } else if (res.ok) {
+        const data = await res.json();
+        document.getElementById('idValue').textContent = data.external_id;
+        document.getElementById('createdValue').textContent = new Date(data.created_at).toLocaleString();
+        document.getElementById('seenValue').textContent = new Date(data.last_seen_at).toLocaleString();
+        document.getElementById('resultCard').style.display = 'block';
+      }
+    } catch (e) {
+      document.getElementById('emptyState').textContent = 'Could not reach the server.';
+      document.getElementById('emptyState').style.display = 'block';
+    }
+  }
+  document.getElementById('checkBtn').addEventListener('click', checkStatus);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') checkStatus(); });
+  if (input.value) checkStatus();
+</script>
+</body>
+</html>

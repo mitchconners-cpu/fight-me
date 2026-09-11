@@ -1,6 +1,7 @@
 #!/bin/bash
 
-TOKEN="8881701685:AAFJF8E8YPt7gjF1uamS8W9lKM5sKrGXYx4"
+set -a; source .env 2>/dev/null; set +a
+TOKEN="$TELEGRAM_BOT_TOKEN"
 OFFSET=0
 DB="wager_bot.db"
 

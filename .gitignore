@@ -1,0 +1,8 @@
+.env
+project.db
+project.db-journal
+__pycache__/
+*.pyc
+.DS_Store
+static/gateway_app.py.bak
+.env

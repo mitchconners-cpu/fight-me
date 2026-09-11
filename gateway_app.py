@@ -10,7 +10,7 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, Form, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse,  FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -19,27 +19,66 @@ from pydantic import BaseModel
 import httpx
 
 async def send_sms_reply(recipient_phone: str, text: str):
+    """
+    Send replies through Telegram when the recipient is a tg_<chat_id>
+    identity. All other recipients continue through the existing mock
+    SMS fallback.
+
+    Telegram credentials are loaded from .env rather than being embedded
+    in source code.
+    """
     if str(recipient_phone).startswith("tg_"):
-        telegram_chat_id = recipient_phone.replace("tg_", "")
-        p1 = "8881701685"
-        p2 = "AAEmoCt9YDdT8XGsoG4qEVei_RGHbNm4Eu4"
-        url = "https://telegram.org" + p1 + ":" + p2 + "/sendMessage"
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.post(url, json={"chat_id": telegram_chat_id, "text": text}, timeout=10.0)
-                if response.status_code == 200:
-                    print(f"[TELEGRAM SUCCESS] Sent directly to chat {telegram_chat_id}")
-                    return {"status": "telegram_sent"}
-            except Exception as e:
-                print(f"[TELEGRAM CRITICAL] Loop failed: {e}")
+        telegram_chat_id = str(recipient_phone)[3:]
+        telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+
+        if not telegram_bot_token:
+            print("[TELEGRAM ERROR] TELEGRAM_BOT_TOKEN is missing from .env")
+            return {"status": "telegram_failed"}
+
+        url = f"https://api.telegram.org/bot{telegram_bot_token}/sendMessage"
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    url,
+                    json={
+                        "chat_id": telegram_chat_id,
+                        "text": text,
+                    },
+                    timeout=10.0,
+                )
+
+            if response.status_code == 200:
+                print(
+                    f"[TELEGRAM SUCCESS] Sent directly to chat "
+                    f"{telegram_chat_id}"
+                )
+                return {"status": "telegram_sent"}
+
+            print(
+                f"[TELEGRAM ERROR] HTTP {response.status_code}: "
+                f"{response.text[:500]}"
+            )
+
+        except Exception as e:
+            print(f"[TELEGRAM CRITICAL] Send failed: {e}")
+
         return {"status": "telegram_failed"}
-    
-    # Fallback to your mock gateway setup on 8081
+
+    # Existing local/mock SMS fallback.
     try:
         async with httpx.AsyncClient() as client:
-            await client.post("http://127.0.0", json={"to": recipient_phone, "message": text}, timeout=5.0)
+            await client.post(
+                "http://127.0.0.1:8081/send",
+                json={
+                    "to": recipient_phone,
+                    "message": text,
+                },
+                timeout=5.0,
+            )
     except Exception:
         pass
+
     print(f"[SMS MOCK FALLBACK -> {recipient_phone}]: {text}")
     return {"status": "mock_sent"}
 
@@ -577,13 +616,6 @@ async def create_bet_internal(creator_token: str, terms: str, wager_amount: floa
 
 
 # --- WEB DASHBOARD ROUTING ---
-@app.get("/")
-@app.get("/console")
-async def serve_dashboard():
-    if os.path.exists("static/index.html"):
-        return FileResponse("static/index.html")
-    return JSONResponse(status_code=404, content={"detail": "static/index.html not found."})
-
 
 # --- API ENDPOINTS ---
 @app.get("/api/btc-price")
@@ -848,6 +880,26 @@ async def get_guide():
 
 
 # --- SMS ROUTERS (LOCAL GATEWAY & TWILIO) ---
+@app.post("/webhook/telegram")
+async def receive_telegram_webhook(request: Request):
+    """Receive Telegram messages and pass them through the existing SMS command engine."""
+    try:
+        update = await request.json()
+        message = update.get("message") or {}
+        chat = message.get("chat") or {}
+        text = message.get("text")
+        chat_id = chat.get("id")
+
+        if chat_id is None or not text:
+            return {"status": "ignored"}
+
+        payload = InboundSMS(sender="tg_" + str(chat_id), message=str(text))
+        await receive_local_carrier_sms(payload)
+        return {"status": "success"}
+    except Exception as e:
+        print(f"[TELEGRAM WEBHOOK ERROR] {e}")
+        return {"status": "error"}
+
 @app.post("/webhook/twilio-sms")
 async def receive_twilio_sms(request: Request, From: str = Form(...), Body: str = Form(...), X_Twilio_Signature: str = Header(None)):
     """Twilio Webhook Handler. Validates the request signature before
@@ -1156,116 +1208,31 @@ async def receive_local_carrier_sms(payload: InboundSMS):
                 else:
                     await db.execute("UPDATE bets SET approvals_count = ? WHERE bet_id = ?", (new_count, bet_id))
 
-# ==========================================
-# ==========================================
-import httpx
 
-# ==========================================
-# ==========================================
-import httpx
 
-async def send_sms_reply(recipient_phone: str, text: str):
-    """The single source of truth for routing outbound messages"""
-    if str(recipient_phone).startswith("tg_"):
-        telegram_chat_id = recipient_phone.replace("tg_", "")
-        token = "8881701685:AAEmoCt9YDdT8XGsoG4qEVei_RGHbNm4Eu4"
-        telegram_api_url = f"https://telegram.org{token}/sendMessage"
-        
-        payload = {"chat_id": telegram_chat_id, "text": text}
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.post(telegram_api_url, json=payload, timeout=10.0)
-                if response.status_code == 200:
-                    print(f"[TELEGRAM SUCCESS] Sent message to {telegram_chat_id}")
-                    return {"status": "telegram_sent"}
-                else:
-                    print(f"[TELEGRAM ERROR] {response.status_code}: {response.text}")
-            except Exception as e:
-                print(f"[TELEGRAM CRITICAL] Failed to contact API: {e}")
-        return {"status": "telegram_failed"}
-    else:
-        print(f"[SMS OUTBOUND DELEGATE -> {recipient_phone}]: {text}")
-        return {"status": "mock_sent"}
+@app.get("/", response_class=HTMLResponse)
+def serve_mobile_wagering_app():
+    with open("static/mobile.html", "r", encoding="utf-8") as f:
+        return f.read()
 
-# ==========================================
-# ==========================================
-import httpx
+# --- Mobile Web App Integration ---
+@app.get("/", response_class=HTMLResponse)
+async def serve_root_mobile_app():
+    with open("static/mobile.html", "r", encoding="utf-8") as f:
+        return f.read()
 
-async def send_sms_reply(recipient_phone: str, text: str):
-    if str(recipient_phone).startswith("tg_"):
-        telegram_chat_id = recipient_phone.replace("tg_", "")
-        p1 = "8881701685"
-        p2 = "AAEmoCt9YDdT8XGsoG4qEVei_RGHbNm4Eu4"
-        url = "https://telegram.org" + p1 + ":" + p2 + "/sendMessage"
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.post(url, json={"chat_id": telegram_chat_id, "text": text}, timeout=10.0)
-                if response.status_code == 200:
-                    print(f"[TELEGRAM SUCCESS] Sent to {telegram_chat_id}")
-                    return {"status": "telegram_sent"}
-                print(f"[TELEGRAM ERROR] {response.status_code}: {response.text}")
-            except Exception as e:
-                print(f"[TELEGRAM CRITICAL] Failed: {e}")
-        return {"status": "telegram_failed"}
-    else:
-        print(f"[SMS OUTBOUND DELEGATE -> {recipient_phone}]: {text}")
-        return {"status": "mock_sent"}
+@app.get("/mobile", response_class=HTMLResponse)
+async def serve_mobile_app_alias():
+    with open("static/mobile.html", "r", encoding="utf-8") as f:
+        return f.read()
 
-# ==========================================
-# 🔐 TELEGRAM MINI APP SECURITY VERIFIER
-# ==========================================
-import hmac
-import hashlib
-import urllib.parse
 
-def verify_telegram_webapp_data(init_data: str) -> bool:
-    """Validates that incoming bet payloads genuinely came from Telegram"""
-    try:
-        parsed_data = dict(urllib.parse.parse_qsl(init_data))
-        received_hash = parsed_data.pop('hash', None)
-        if not received_hash:
-            return False
-            
-        data_check_string = "\n".join([f"{k}={v}" for k, v in sorted(parsed_data.items())])
-        
-        # Re-create signature using your token segments
-        token = "8881701685:AAEmoCt9YDdT8XGsoG4qEVei_RGHbNm4Eu4"
-        secret_key = hmac.new(b"WebAppData", token.encode(), hashlib.sha256).digest()
-        expected_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
-        
-        return hmac.compare_digest(expected_hash, received_hash)
-    except Exception:
-        return False
-
-# ==========================================
-# 🤖 CUSTOMERPOTATOBOT NON-BLOCKING ROUTER
-# ==========================================
-import httpx
-import asyncio
-
-async def fire_and_forget_telegram(url, chat_id, text):
-    """Executes outbound Telegram calls completely out-of-band"""
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(url, json={"chat_id": chat_id, "text": text}, timeout=8.0)
-            if response.status_code == 200:
-                print(f"[TELEGRAM SUCCESS] Async sent to {chat_id}")
-            else:
-                print(f"[TELEGRAM ERROR] {response.status_code}: {response.text}")
-        except Exception as e:
-            print(f"[TELEGRAM CRITICAL] Background connection failed: {e}")
-
-async def send_sms_reply(recipient_phone: str, text: str):
-    if str(recipient_phone).startswith("tg_"):
-        telegram_chat_id = recipient_phone.replace("tg_", "")
-        p1 = "8881701685"
-        p2 = "AAEmoCt9YDdT8XGsoG4qEVei_RGHbNm4Eu4"
-        url = "https://telegram.org" + p1 + ":" + p2 + "/sendMessage"
-        
-        # Fire off the HTTP task in the background without awaiting it
-        asyncio.create_task(fire_and_forget_telegram(url, telegram_chat_id, text))
-        return {"status": "telegram_queued"}
-    else:
-        # Fallback to your original local Android gateway log print format
-        print(f"[SMS OUTBOUND DELEGATE -> {recipient_phone}]: {text}")
-        return {"status": "mock_sent"}
+@app.post("/api/telegram/webapp-session")
+async def telegram_webapp_session(payload: dict):
+    # Fallback or mock session logic for mobile Telegram WebApp
+    return {
+        "access_granted": True,
+        "btc_address": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+        "required_fee_sats": 0,
+        "btc_price": 95000.00
+    }

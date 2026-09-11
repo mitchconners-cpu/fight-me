@@ -1,0 +1,46 @@
+import logging
+import httpx
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from telegram.ext import Application, MessageHandler, filters, ContextTypes
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
+TELEGRAM_BOT_TOKEN = "8881701685:AAFJF8E8YPt7gjF1uamS8W9lKM5sKrGXYx4"
+GATEWAY_APP_URL = "http://127.0.0"
+
+async def handle_telegram_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
+        return
+    raw_message = update.message.text.strip()
+    sender_id = f"tg_{update.effective_chat.id}"
+    
+    if raw_message.startswith('/'):
+        raw_message = raw_message.lstrip('/').upper()
+
+    payload = {"sender": sender_id, "message": raw_message}
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(GATEWAY_APP_URL, json=payload, timeout=12.0)
+            if response.status_code == 200:
+                web_app_url = ""
+                keyboard = InlineKeyboardMarkup([
+                    [InlineKeyboardButton("📱 Open Mobile Dashboard", web_app=WebAppInfo(url=web_app_url))]
+                ])
+                try:
+                    resp_data = response.json()
+                    reply_text = resp_data.get("reply", "Action processed successfully!")
+                except Exception:
+                    reply_text = "Command executed successfully."
+                await update.message.reply_text(reply_text, reply_markup=keyboard)
+        except Exception as e:
+            logging.error(f"Forward failed: {e}")
+
+def main():
+    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
+    app.add_handler(MessageHandler(filters.COMMAND, handle_telegram_message))
+    print("[SUCCESS] customerpotatobot is listening with active Mobile WebApp layout...")
+    app.run_polling()
+
+if __name__ == '__main__':
+    main()

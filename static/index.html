@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>BTC Wager</title>
+
+<style>
+:root {
+  --bg: #080b10;
+  --surface: #11161d;
+  --surface-2: #171d25;
+  --surface-3: #1d2530;
+  --border: #29323d;
+  --text: #f3f6fa;
+  --muted: #8e9aa8;
+  --accent: #f7931a;
+  --accent-soft: rgba(247,147,26,.12);
+  --success: #35d07f;
+  --danger: #ff5c67;
+  --info: #5aa9ff;
+  --radius: 16px;
+  --shadow: 0 12px 35px rgba(0,0,0,.28);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top right, rgba(247,147,26,.09), transparent 30rem),
+    var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  min-height: 100vh;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(8,11,16,.92);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-inner {
+  width: min(1180px, 100%);
+  margin: auto;
+  min-height: 68px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: #111;
+  font-size: 23px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.brand-text {
+  min-width: 0;
+}
+
+.brand-title {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.brand-subtitle {
+  color: var(--muted);
+  font-size: .72rem;
+  margin-top: 2px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connection {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: .75rem;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 10px rgba(53,208,127,.45);
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+.layout {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 24px 20px 100px;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 24px;
+}
+
+.sidebar {
+  position: sticky;
+  top: 92px;
+  align-self: start;
+}
+
+.nav-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  box-shadow: var(--shadow);
+}
+
+.nav-button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  padding: 12px;
+  border-radius: 11px;
+  cursor: pointer;
+  margin: 0;
+  transition: .15s ease;
+}
+
+.nav-button:hover,
+.nav-button.active {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.nav-icon {
+  display: inline-block;
+  width: 24px;
+}
+
+.main {
+  min-width: 0;
+}
+
+/* =========================
+   HERO
+========================= */
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(1.65rem, 4vw, 2.3rem);
+  letter-spacing: -.04em;
+}
+
+.hero p {
+  color: var(--muted);
+  margin: 7px 0 0;
+  line-height: 1.5;
+}
+
+.price-card {
+  min-width: 190px;
+  background: linear-gradient(145deg, #191f27, #10151b);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+
+.price-label {
+  color: var(--muted);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.price {
+  margin-top: 4px;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.price-status {
+  color: var(--muted);
+  font-size: .7rem;
+  margin-top: 3px;
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.panel {
+  background: rgba(17,22,29,.94);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+
+.panel.hidden {
+  display: none;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.panel h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.panel-description {
+  color: var(--muted);
+  font-size: .8rem;
+  line-height: 1.5;
+  margin: 3px 0 0;
+}
+
+/* =========================
+   LOGIN
+========================= */
+
+.login-card {
+  border-color: rgba(247,147,26,.35);
+}
+
+.identity {
+  display: none;
+  margin-top: 14px;
+  padding: 12px;
+  background: var(--surface-2);
+  border-radius: 12px;
+}
+
+.identity.visible {
+  display: block;
+}
+
+.identity-label {
+  color: var(--muted);
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.identity-address {
+  margin-top: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .78rem;
+  word-break: break-all;
+}
+
+/* =========================
+   FORMS
+========================= */
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+label {
+  display: block;
+  color: var(--muted);
+  font-size: .76rem;
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  color: var(--text);
+  background: #0b0f14;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  outline: none;
+  padding: 12px 13px;
+  min-height: 46px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+button.primary,
+button.secondary,
+button.danger {
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 11px;
+  font-weight: 750;
+  cursor: pointer;
+  margin: 0;
+  transition: transform .1s, opacity .15s, background .15s;
+}
+
+button.primary {
+  background: var(--accent);
+  color: #111;
+  border: 1px solid var(--accent);
+}
+
+button.secondary {
+  background: var(--surface-3);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+button.danger {
+  background: rgba(255,92,103,.1);
+  color: var(--danger);
+  border: 1px solid rgba(255,92,103,.3);
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.status {
+  display: none;
+  margin-top: 13px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  font-size: .8rem;
+  line-height: 1.45;
+}
+
+.status.visible {
+  display: block;
+}
+
+.status.ok {
+  background: rgba(53,208,127,.1);
+  border: 1px solid rgba(53,208,127,.25);
+  color: var(--success);
+}
+
+.status.bad {
+  background: rgba(255,92,103,.1);
+  border: 1px solid rgba(255,92,103,.25);
+  color: var(--danger);
+}
+
+.status.info {
+  background: rgba(90,169,255,.1);
+  border: 1px solid rgba(90,169,255,.25);
+  color: var(--info);
+}
+
+/* =========================
+   WAGERS
+========================= */
+
+.bet-list {
+  display: grid;
+  gap: 10px;
+}
+
+.bet-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 14px;
+}
+
+.bet-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.bet-id {
+  color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 99px;
+  padding: 4px 8px;
+  background: #252d37;
+  color: var(--muted);
+  font-size: .64rem;
+  font-weight: 700;
+}
+
+.bet-terms {
+  margin-top: 9px;
+  line-height: 1.45;
+  font-size: .88rem;
+}
+
+.bet-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: .72rem;
+}
+
+.empty {
+  text-align: center;
+  padding: 25px 10px;
+  color: var(--muted);
+  font-size: .82rem;
+}
+
+/* =========================
+   FEE
+========================= */
+
+.fee-box {
+  background: var(--accent-soft);
+  border: 1px solid rgba(247,147,26,.25);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.fee-label {
+  color: var(--muted);
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.fee-address {
+  margin-top: 7px;
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .75rem;
+}
+
+/* =========================
+   MOBILE NAV
+========================= */
+
+.mobile-nav {
+  display: none;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 18px 14px 92px;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .mobile-nav {
+    position: fixed;
+    display: flex;
+    left: 10px;
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    z-index: 100;
+    background: rgba(17,22,29,.96);
+    border: 1px solid var(--border);
+    border-radius: 17px;
+    padding: 6px;
+    box-shadow: 0 15px 40px rgba(0,0,0,.5);
+    backdrop-filter: blur(18px);
+  }
+
+  .mobile-nav button {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    padding: 8px 4px;
+    min-height: 54px;
+    margin: 0;
+    border-radius: 12px;
+    font-size: .65rem;
+    font-weight: 700;
+  }
+
+  .mobile-nav button.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .mobile-icon {
+    display: block;
+    font-size: 18px;
+    margin-bottom: 3px;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .price-card {
+    min-width: 0;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .topbar-inner {
+    padding: 0 14px;
+  }
+
+  .connection {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .brand-subtitle {
+    display: none;
+  }
+
+  .grid2 {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .hero h1 {
+    font-size: 1.65rem;
+  }
+
+  .panel-header {
+    align-items: flex-start;
+  }
+
+  .actions button {
+    flex: 1;
+  }
+
+  input,
+  select,
+  textarea,
+  button.primary,
+  button.secondary,
+  button.danger {
+    min-height: 48px;
+  }
+}
+
+/* Desktop sections */
+.section-anchor {
+  scroll-margin-top: 90px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-inner">
+
+      <div class="brand">
+        <div class="logo">₿</div>
+        <div class="brand-text">
+          <div class="brand-title">BTC Wager</div>
+          <div class="brand-subtitle">Anonymous wager console</div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="connection">
+          <span class="dot"></span>
+          <span>Online</span>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- DESKTOP SIDEBAR -->
+    <aside class="sidebar">
+      <div class="nav-card">
+        <button class="nav-button active" onclick="goTo('dashboard')">
+          <span class="nav-icon">⌂</span> Dashboard
+        </button>
+
+        <button class="nav-button" onclick="goTo('create-section')">
+          <span class="nav-icon">＋</span> Create
+        </button>
+
+        <button class="nav-button" onclick="goTo('open-section')">
+          <span class="nav-icon">◎</span> Open Wagers
+        </button>
+
+        <button class="nav-button" onclick="goTo('mine-section')">
+          <span class="nav-icon">▣</span> My Wagers
+        </button>
+
+        <button class="nav-button" onclick="goTo('vote-section')">
+          <span class="nav-icon">✓</span> Resolve
+        </button>
+      </div>
+    </aside>
+
+    <main class="main" id="dashboard">
+
+      <!-- HERO -->
+      <section class="hero">
+        <div>
+          <h1>Welcome to BTC Wager</h1>
+          <p>
+            Sign in with your BTC address to manage your wagers.
+            Your address acts as your account identity.
+          </p>
+        </div>
+
+        <div class="price-card">
+          <div class="price-label">Bitcoin price</div>
+          <div class="price" id="btc-price">Loading...</div>
+          <div class="price-status" id="btc-price-status">Fetching current price</div>
+        </div>
+      </section>
+
+      <!-- LOGIN -->
+      <section class="panel login-card section-anchor" id="login-panel">
+
+        <div class="panel-header">
+          <div class="panel-title">
+            <div class="panel-icon">🔐</div>
+            <div>
+              <h2>Sign in</h2>
+              <div class="panel-description">
+                Use your BTC address as your identity.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="btc-address">Bitcoin address</label>
+          <input
+            id="btc-address"
+            placeholder="bc1q..."
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+          >
+        </div>
+
+        <div class="actions">
+          <button class="primary" onclick="login()">Sign In</button>
+        </div>
+
+        <div id="login-status" class="status"></div>
+
+        <div id="identity" class="identity">
+          <div class="identity-label">Signed in as</div>
+          <div id="identity-address" class="identity-address"></div>
+        </div>
+
+      </section>
+
+      <!-- FEE -->
+      <section class="panel hidden section-anchor" id="fee-panel">
+
+        <div class="panel-header">
+          <div class="panel-title">
+            <div class="panel-icon">⚡</div>
+            <div>
+              <h2>Account activation</h2>
+              <div class="panel-description">
+                Your account may require the configured activation fee.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="fee-copy" class="fee-box"></div>
+
+        <div class="actions">
+          <button class="primary" onclick="confirmFee()">
+            Check Activation
+          </button>
+        </div>
+
+        <div id="fee-status" class="status"></div>
+
+      </section>
+
+      <!-- CREATE -->
+      <section class="panel hidden section-anchor" id="create-panel">
+
+        <div class="panel-header">
+          <div class="panel-title">
+            <div class="panel-icon">＋</div>
+            <div>
+              <h2>Create a wager</h2>
+              <div class="panel-description">
+                Define the terms and amount of your wager.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="terms">Wager terms</label>
+          <textarea
+            id="terms"
+            placeholder="Example: Seahawks beat the Broncos on Sunday"
+          ></textarea>
+        </div>
+
+        <div class="grid2">
+
+          <div class="form-group">
+            <label for="amount">Amount</label>
+            <input
+              id="amount"
+              type="number"
+              step="any"
+              min="0"
+              placeholder="50"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="currency">Currency</label>
+            <select id="currency">
+              <option value="USD">USD</option>
+              <option value="BTC">BTC</option>
+              <option value="SATS">SATS</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="form-group">
+          <label for="payout">
+            Payout address
+          </label>
+          <input
+            id="payout"
+            placeholder="bc1q..."
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+          >
+        </div>
+
+        <div class="actions">
+          <button class="primary" onclick="createBet()">
+            Create Wager
+          </button>
+        </div>
+
+        <div id="create-status" class="status"></div>
+
+      </section>
+
+      <!-- OPEN WAGERS -->
+      <section class="panel section-anchor" id="open-section">
+
+        <div class="panel-header">
+          <div class="panel-title">
+            <div class="panel-icon">◎</div>
+            <div>
+              <h2>Open wagers</h2>
+              <div class="panel-description">
+                Wagers currently waiting for another participant.
+              </div>
+            </div>
+          </div>
+
+          <button class="secondary" onclick="loadOpenBets()">
+            Refresh
+          </button>
+        </div>
+
+        <div id="open-list" class="bet-list">
+          <div class="empty">Loading wagers...</div>
+        </div>
+
+      </section>
+
+      <!-- JOIN -->
+      <section class="panel hidden section-anchor" id="join-panel">
+
+        <div class="panel-header">
+          <div class="panel-title">
+            <div class="panel-icon">↗</div>
+            <div>
+              <h2>Join a wager</h2>
+              <div class="panel-description">
+                Enter the wager ID from an open wager.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid2">
+
+          <div class="form-group">
+            <label for="join-bet-id">Wager ID</label>
+            <input
+              id="join-bet-id"
+              placeholder="BET-XXXXXXXX"
+              autocomplete="off"
+              autocapitalize="characters"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="join-payout">Your payout address</label>
+            <input
+              id="join-payout"
+              placeholder="bc1q..."
+              autocomplete="off"
+              autocapitalize="none"
+              spellcheck="false"
+            >
+          </div>
+
+        </div>
+
+        <div class="actions">
+          <button class="primary" onclick="joinBet()">
+            Join Wager
+          </button>
+        </div>
+
+        <div id="join-status" class="status"></div>
+
+      </section>
+
+      <!-- MY WAGERS -->
+      <section class="panel hidden section-anchor" id="mine-section">
+
+        <div class="panel-header">
+          <div class="panel-title">
+            <div class="panel-icon">▣</div>
+            <div>
+              <h2>My wagers</h2>
+              <div class="panel-description">
+                Wagers associated with your BTC address.
+              </div>
+            </div>
+          </div>
+
+          <button class="secondary" onclick="loadMyBets()">
+            Refresh
+          </button>
+        </div>
+
+        <div id="mine-list" class="bet-list">
+          <div class="empty">Sign in to view your wagers.</div>
+        </div>
+
+      </section>
+
+      <!-- VOTE -->
+      <section class="panel hidden section-anchor" id="vote-section">
+
+        <div class="panel-header">
+          <div class="panel-title">
+            <div class="panel-icon">✓</div>
+            <div>
+              <h2>Resolve a wager</h2>
+              <div class="panel-description">
+                Submit the winner according to the existing wager rules.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid2">
+
+          <div class="form-group">
+            <label for="vote-bet-id">Wager ID</label>
+            <input
+              id="vote-bet-id"
+              placeholder="BET-XXXXXXXX"
+              autocomplete="off"
+              autocapitalize="characters"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="vote-winner">Winner user token</label>
+            <input
+              id="vote-winner"
+              placeholder="Winner's token"
+              autocomplete="off"
+            >
+          </div>
+
+        </div>
+
+        <div class="actions">
+          <button class="primary" onclick="voteBet()">
+            Submit Vote
+          </button>
+        </div>
+
+        <div id="vote-status" class="status"></div>
+
+        <div class="panel-description" style="margin-top:14px;">
+          If participant votes agree, the wager can resolve according
+          to the backend rules. Conflicting votes may require additional
+          approval.
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MOBILE NAV -->
+  <nav class="mobile-nav">
+
+    <button class="active" onclick="goTo('dashboard')">
+      <span class="mobile-icon">⌂</span>
+      Home
+    </button>
+
+    <button onclick="goTo('create-section')">
+      <span class="mobile-icon">＋</span>
+      Create
+    </button>
+
+    <button onclick="goTo('open-section')">
+      <span class="mobile-icon">◎</span>
+      Open
+    </button>
+
+    <button onclick="goTo('mine-section')">
+      <span class="mobile-icon">▣</span>
+      Mine
+    </button>
+
+    <button onclick="goTo('vote-section')">
+      <span class="mobile-icon">✓</span>
+      Resolve
+    </button>
+
+  </nav>
+
+</div>
+
+<script>
+const API = "";
+let currentAddress = null;
+
+/* =========================
+   GENERAL UI
+========================= */
+
+function setStatus(id, message, type) {
+  const el = document.getElementById(id);
+
+  if (!el) return;
+
+  el.textContent = message;
+  el.className = "status visible " + (
+    type === "ok" ? "ok" :
+    type === "info" ? "info" :
+    "bad"
+  );
+}
+
+function clearStatus(id) {
+  const el = document.getElementById(id);
+
+  if (!el) return;
+
+  el.textContent = "";
+  el.className = "status";
+}
+
+function escapeHtml(value) {
+  const div = document.createElement("div");
+  div.textContent = value == null ? "" : String(value);
+  return div.innerHTML;
+}
+
+function shortAddress(address) {
+  if (!address) return "";
+  if (address.length <= 18) return address;
+  return address.slice(0, 10) + "..." + address.slice(-8);
+}
+
+function goTo(id) {
+  const target = document.getElementById(id);
+
+  if (target) {
+    target.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+
+  document.querySelectorAll(".nav-button").forEach(button => {
+    button.classList.remove("active");
+  });
+
+  document.querySelectorAll(".mobile-nav button").forEach(button => {
+    button.classList.remove("active");
+  });
+}
+
+/* =========================
+   BTC PRICE
+========================= */
+
+async function loadBTCPrice() {
+  const priceEl = document.getElementById("btc-price");
+  const statusEl = document.getElementById("btc-price-status");
+
+  try {
+    const res = await fetch(`${API}/api/btc-price`, {
+      cache: "no-store"
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.detail || "Unable to load BTC price");
+    }
+
+    const value =
+      data.price ??
+      data.usd ??
+      data.btc_price ??
+      data.BTC_USD;
+
+    if (value !== undefined && value !== null) {
+      const number = Number(value);
+
+      priceEl.textContent = Number.isFinite(number)
+        ? "$" + number.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })
+        : String(value);
+
+      statusEl.textContent = "Current market price";
+    } else {
+      priceEl.textContent = "Unavailable";
+      statusEl.textContent = "Price response received";
+    }
+
+  } catch (error) {
+    priceEl.textContent = "Unavailable";
+    statusEl.textContent = "Unable to fetch price";
+    console.error("BTC price error:", error);
+  }
+}
+
+/* =========================
+   LOGIN
+========================= */
+
+async function login() {
+  const addr = document
+    .getElementById("btc-address")
+    .value
+    .trim();
+
+  if (!addr) {
+    setStatus(
+      "login-status",
+      "Enter a BTC address first.",
+      "bad"
+    );
+    return;
+  }
+
+  setStatus(
+    "login-status",
+    "Signing in...",
+    "info"
+  );
+
+  try {
+    const res = await fetch(`${API}/api/auth/btc-login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        btc_address: addr
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setStatus(
+        "login-status",
+        data.detail || "Login failed.",
+        "bad"
+      );
+      return;
+    }
+
+    currentAddress = addr;
+
+    document.getElementById("payout").value = addr;
+    document.getElementById("join-payout").value = addr;
+
+    document.getElementById("identity").classList.add("visible");
+    document.getElementById("identity-address").textContent = addr;
+
+    setStatus(
+      "login-status",
+      "Signed in successfully.",
+      "ok"
+    );
+
+    document.getElementById("fee-panel").classList.remove("hidden");
+    document.getElementById("mine-section").classList.remove("hidden");
+    document.getElementById("vote-section").classList.remove("hidden");
+    document.getElementById("create-panel").classList.remove("hidden");
+    document.getElementById("join-panel").classList.remove("hidden");
+
+    if (data.access_granted) {
+
+      unlockBetting();
+
+      document.getElementById("fee-copy").innerHTML =
+        '<div class="fee-label">Account status</div>' +
+        '<div style="margin-top:6px;">' +
+        'Your account is active. You can create and join wagers.' +
+        '</div>';
+
+      setStatus(
+        "fee-status",
+        "Account is already active.",
+        "ok"
+      );
+
+    } else {
+
+      document.getElementById("fee-copy").innerHTML =
+        '<div class="fee-label">Activation required</div>' +
+        '<div style="margin-top:6px;">' +
+        'Send <strong>' +
+        escapeHtml(data.required_fee_sats ?? "the required") +
+        ' sats</strong> to the configured activation address.' +
+        '</div>' +
+        '<div class="fee-address">' +
+        escapeHtml(data.fee_deposit_address || "Address unavailable") +
+        '</div>';
+    }
+
+    await loadMyBets();
+
+    document
+      .getElementById("fee-panel")
+      .scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+
+  } catch (error) {
+
+    console.error("Login error:", error);
+
+    setStatus(
+      "login-status",
+      "Network error contacting the server.",
+      "bad"
+    );
+  }
+}
+
+/* =========================
+   ACCESS
+========================= */
+
+function unlockBetting() {
+  document
+    .getElementById("create-panel")
+    .classList.remove("hidden");
+
+  document
+    .getElementById("join-panel")
+    .classList.remove("hidden");
+}
+
+async function confirmFee() {
+
+  if (!currentAddress) {
+    setStatus(
+      "fee-status",
+      "Sign in first.",
+      "bad"
+    );
+    return;
+  }
+
+  setStatus(
+    "fee-status",
+    "Checking activation...",
+    "info"
+  );
+
+  try {
+
+    const res = await fetch(`${API}/api/auth/confirm-fee`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        btc_address: currentAddress
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.status === "success") {
+
+      setStatus(
+        "fee-status",
+        "Account activated successfully.",
+        "ok"
+      );
+
+      unlockBetting();
+
+    } else {
+
+      setStatus(
+        "fee-status",
+        data.message || "Payment has not been detected yet.",
+        "bad"
+      );
+    }
+
+  } catch (error) {
+
+    console.error("Fee confirmation error:", error);
+
+    setStatus(
+      "fee-status",
+      "Network error checking activation.",
+      "bad"
+    );
+  }
+}
+
+/* =========================
+   CREATE WAGER
+========================= */
+
+async function createBet() {
+
+  if (!currentAddress) {
+    setStatus(
+      "create-status",
+      "Sign in before creating a wager.",
+      "bad"
+    );
+    return;
+  }
+
+  const terms = document
+    .getElementById("terms")
+    .value
+    .trim();
+
+  const amount = parseFloat(
+    document.getElementById("amount").value
+  );
+
+  const currency = document
+    .getElementById("currency")
+    .value;
+
+  const payout =
+    document.getElementById("payout").value.trim() ||
+    currentAddress;
+
+  if (!terms) {
+    setStatus(
+      "create-status",
+      "Enter the wager terms.",
+      "bad"
+    );
+    return;
+  }
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    setStatus(
+      "create-status",
+      "Enter a valid wager amount.",
+      "bad"
+    );
+    return;
+  }
+
+  setStatus(
+    "create-status",
+    "Creating wager...",
+    "info"
+  );
+
+  try {
+
+    const res = await fetch(`${API}/api/bets/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        creator_identifier: currentAddress,
+        terms: terms,
+        wager_amount: amount,
+        currency: currency,
+        payout_address: payout
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+
+      const detail =
+        typeof data.detail === "string"
+          ? data.detail
+          : JSON.stringify(data.detail || data);
+
+      setStatus(
+        "create-status",
+        detail || "Could not create wager.",
+        "bad"
+      );
+
+      return;
+    }
+
+    setStatus(
+      "create-status",
+      `Wager ${data.bet_id || ""} created successfully.`,
+      "ok"
+    );
+
+    document.getElementById("terms").value = "";
+    document.getElementById("amount").value = "";
+
+    await loadOpenBets();
+    await loadMyBets();
+
+  } catch (error) {
+
+    console.error("Create wager error:", error);
+
+    setStatus(
+      "create-status",
+      "Network error creating wager.",
+      "bad"
+    );
+  }
+}
+
+/* =========================
+   JOIN WAGER
+========================= */
+
+async function joinBet() {
+
+  if (!currentAddress) {
+    setStatus(
+      "join-status",
+      "Sign in before joining a wager.",
+      "bad"
+    );
+    return;
+  }
+
+  const betId = document
+    .getElementById("join-bet-id")
+    .value
+    .trim()
+    .toUpperCase();
+
+  const payout =
+    document.getElementById("join-payout").value.trim() ||
+    currentAddress;
+
+  if (!betId) {
+    setStatus(
+      "join-status",
+      "Enter a wager ID.",
+      "bad"
+    );
+    return;
+  }
+
+  setStatus(
+    "join-status",
+    "Joining wager...",
+    "info"
+  );
+
+  try {
+
+    const res = await fetch(`${API}/api/bets/join`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        bet_id: betId,
+        opponent_identifier: currentAddress,
+        payout_address: payout
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+
+      const detail =
+        typeof data.detail === "string"
+          ? data.detail
+          : JSON.stringify(data.detail || data);
+
+      setStatus(
+        "join-status",
+        detail || "Could not join wager.",
+        "bad"
+      );
+
+      return;
+    }
+
+    setStatus(
+      "join-status",
+      data.message || "Joined wager successfully.",
+      "ok"
+    );
+
+    await loadOpenBets();
+    await loadMyBets();
+
+  } catch (error) {
+
+    console.error("Join wager error:", error);
+
+    setStatus(
+      "join-status",
+      "Network error joining wager.",
+      "bad"
+    );
+  }
+}
+
+/* =========================
+   VOTE
+========================= */
+
+async function voteBet() {
+
+  if (!currentAddress) {
+    setStatus(
+      "vote-status",
+      "Sign in before submitting a vote.",
+      "bad"
+    );
+    return;
+  }
+
+  const betId = document
+    .getElementById("vote-bet-id")
+    .value
+    .trim()
+    .toUpperCase();
+
+  const winner = document
+    .getElementById("vote-winner")
+    .value
+    .trim();
+
+  if (!betId || !winner) {
+    setStatus(
+      "vote-status",
+      "Enter both the wager ID and winner token.",
+      "bad"
+    );
+    return;
+  }
+
+  setStatus(
+    "vote-status",
+    "Submitting vote...",
+    "info"
+  );
+
+  try {
+
+    const res = await fetch(`${API}/api/bets/vote`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        bet_id: betId,
+        voter_identifier: currentAddress,
+        voted_winner_token: winner
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+
+      const detail =
+        typeof data.detail === "string"
+          ? data.detail
+          : JSON.stringify(data.detail || data);
+
+      setStatus(
+        "vote-status",
+        detail || "Vote failed.",
+        "bad"
+      );
+
+      return;
+    }
+
+    setStatus(
+      "vote-status",
+      data.message || "Vote submitted successfully.",
+      "ok"
+    );
+
+    await loadMyBets();
+
+  } catch (error) {
+
+    console.error("Vote error:", error);
+
+    setStatus(
+      "vote-status",
+      "Network error submitting vote.",
+      "bad"
+    );
+  }
+}
+
+/* =========================
+   OPEN WAGERS
+========================= */
+
+async function loadOpenBets() {
+
+  const list = document.getElementById("open-list");
+
+  list.innerHTML =
+    '<div class="empty">Loading open wagers...</div>';
+
+  try {
+
+    const res = await fetch(
+      `${API}/api/bets/list`,
+      { cache: "no-store" }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data.detail || "Unable to load wagers"
+      );
+    }
+
+    const open = (data.bets || [])
+      .filter(
+        bet => bet.status === "PENDING_ACCEPTANCE"
+      );
+
+    if (!open.length) {
+
+      list.innerHTML =
+        '<div class="empty">' +
+        'No open wagers right now.' +
+        '</div>';
+
+      return;
+    }
+
+    list.innerHTML = "";
+
+    open.forEach(bet => {
+
+      const row = document.createElement("div");
+
+      row.className = "bet-card";
+
+      row.innerHTML = `
+        <div class="bet-top">
+          <span class="bet-id">
+            ${escapeHtml(bet.bet_id)}
+          </span>
+
+          <span class="tag">
+            ${escapeHtml(bet.status)}
+          </span>
+        </div>
+
+        <div class="bet-terms">
+          ${escapeHtml(bet.terms)}
+        </div>
+
+        <div class="bet-meta">
+          <span>
+            ${escapeHtml(bet.wager_amount)}
+            ${escapeHtml(bet.currency)}
+          </span>
+
+          <button
+            class="secondary"
+            style="margin-left:auto;padding:7px 10px;min-height:34px;font-size:.72rem;"
+            onclick="prepareJoin('${escapeHtml(bet.bet_id)}')"
+          >
+            Join
+          </button>
+        </div>
+      `;
+
+      list.appendChild(row);
+    });
+
+  } catch (error) {
+
+    console.error("Open wagers error:", error);
+
+    list.innerHTML =
+      '<div class="empty">' +
+      'Unable to load open wagers. ' +
+      escapeHtml(error.message || "") +
+      '</div>';
+  }
+}
+
+function prepareJoin(betId) {
+
+  const input = document.getElementById("join-bet-id");
+
+  if (!input) return;
+
+  input.value = betId;
+
+  const joinPanel =
+    document.getElementById("join-panel");
+
+  if (joinPanel) {
+    joinPanel.classList.remove("hidden");
+
+    joinPanel.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+/* =========================
+   MY WAGERS
+========================= */
+
+async function loadMyBets() {
+
+  const list = document.getElementById("mine-list");
+
+  if (!currentAddress) {
+    list.innerHTML =
+      '<div class="empty">Sign in to view your wagers.</div>';
+    return;
+  }
+
+  list.innerHTML =
+    '<div class="empty">Loading your wagers...</div>';
+
+  try {
+
+    const res = await fetch(
+      `${API}/api/bets/mine?btc_address=${encodeURIComponent(currentAddress)}`,
+      { cache: "no-store" }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data.detail || "Unable to load your wagers"
+      );
+    }
+
+    const bets = data.bets || [];
+
+    if (!bets.length) {
+
+      list.innerHTML =
+        '<div class="empty">' +
+        'You do not have any wagers yet.' +
+        '</div>';
+
+      return;
+    }
+
+    list.innerHTML = "";
+
+    bets.forEach(bet => {
+
+      const row = document.createElement("div");
+
+      row.className = "bet-card";
+
+      row.innerHTML = `
+        <div class="bet-top">
+          <span class="bet-id">
+            ${escapeHtml(bet.bet_id)}
+          </span>
+
+          <span class="tag">
+            ${escapeHtml(bet.status)}
+          </span>
+        </div>
+
+        <div class="bet-terms">
+          ${escapeHtml(bet.terms)}
+        </div>
+
+        <div class="bet-meta">
+          <span>
+            ${escapeHtml(bet.wager_amount ?? "")}
+            ${escapeHtml(bet.currency ?? "")}
+          </span>
+        </div>
+      `;
+
+      list.appendChild(row);
+    });
+
+  } catch (error) {
+
+    console.error("My wagers error:", error);
+
+    list.innerHTML =
+      '<div class="empty">' +
+      'Unable to load your wagers. ' +
+      escapeHtml(error.message || "") +
+      '</div>';
+  }
+}
+
+/* =========================
+   STARTUP
+========================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadBTCPrice();
+  loadOpenBets();
+
+  // Refresh public BTC price periodically.
+  setInterval(loadBTCPrice, 60000);
+
+  // Refresh open wagers periodically.
+  setInterval(loadOpenBets, 30000);
+});
+</script>
+
+</body>
+</html>
