@@ -44,3 +44,40 @@ logs/
 *.temp
 *.swp
 *.swo
+
+# Local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+credentials/
+secrets/
+
+# Python environments
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# macOS / editors
+.DS_Store
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
