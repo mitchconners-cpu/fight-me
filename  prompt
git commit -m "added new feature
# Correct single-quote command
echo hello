@@ -1,0 +1,7 @@
+hello world 
+
+# Unclosed double quote creates dquote world
+
+# Correct double-quote command
+git commit -m "added new feature"
+

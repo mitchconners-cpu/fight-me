@@ -1,48 +1,32 @@
-from dotenv import load_dotenv
-import os
+import sqlite3
 import logging
-import httpx
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
-from telegram.ext import Application, MessageHandler, filters, ContextTypes
+from telegram import Update
+from telegram.ext import ContextTypes
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+DB_PATH = "project.db"
 
-load_dotenv()
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
-GATEWAY_APP_URL = "https://bondless-eastcoast-bankbook.ngrok-free.dev/webhook/inbound-sms"
-async def handle_telegram_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not update.message or not update.message.text:
+def get_bet_record(bet_id: str):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT bet_id, status, wager_amount_sats, escrow_address FROM bets WHERE bet_id = ?", (bet_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+async def check_bet_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.message or not context.args:
         return
-    raw_message = update.message.text.strip()
-    sender_id = f"tg_{update.effective_chat.id}"
-    
-    if raw_message.startswith('/'):
-        raw_message = raw_message.lstrip('/').upper()
+    bet_id = context.args[0].upper()
+    bet = get_bet_record(bet_id)
+    if not bet:
+        await update.message.reply_text(f"❌ Wager `{bet_id}` not found.", parse_mode="Markdown")
+        return
 
-    payload = {"sender": sender_id, "message": raw_message}
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(GATEWAY_APP_URL, json=payload, timeout=12.0)
-            if response.status_code == 200:
-                web_app_url = "https://bondless-eastcoast-bankbook.ngrok-free.dev/mobile"
-                keyboard = InlineKeyboardMarkup([
-                    [InlineKeyboardButton("📱 Open Mobile Dashboard", web_app=WebAppInfo(url=web_app_url))]
-                ])
-                try:
-                    resp_data = response.json()
-                    reply_text = resp_data.get("reply", "Action processed successfully!")
-                except Exception:
-                    reply_text = "Command executed successfully."
-                await update.message.reply_text(reply_text, reply_markup=keyboard)
-        except Exception as e:
-            logging.error(f"Forward failed: {e}")
-
-def main():
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
-    app.add_handler(MessageHandler(filters.COMMAND, handle_telegram_message))
-    print("[SUCCESS] customerpotatobot is listening with active Mobile WebApp layout...")
-    app.run_polling()
-
-if __name__ == '__main__':
-    main()
+    await update.message.reply_text(
+        f"📊 **Wager Status: `{bet['bet_id']}`**\n"
+        f"• **State:** `{bet['status']}`\n"
+        f"• **Amount:** {bet['wager_amount_sats']} sats\n"
+        f"• **Escrow:** `{bet['escrow_address'] or 'N/A'}`",
+        parse_mode="Markdown",
+    )

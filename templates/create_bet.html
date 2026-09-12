@@ -1,0 +1,51 @@
+{# 
+  Create Wager Template (`templates/create_bet.html`).
+  Renders a form for users to initiate a new wager escrow session.
+#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Create New Escrow Wager</title>
+    <style>
+        :root { --bg-color: #0f172a; --card-bg: #1e293b; --border-color: #334155; --text-main: #f8fafc; --text-muted: #94a3b8; --accent: #38bdf8; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 1.5rem; display: flex; justify-content: center; align-items: center; min-height: 80vh; }
+        .form-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 2rem; width: 100%; max-width: 500px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        h1 { color: var(--accent); font-size: 1.5rem; margin-top: 0; margin-bottom: 1rem; }
+        p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-main); }
+        input { width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 1rem; box-sizing: border-box; }
+        input:focus { outline: none; border-color: var(--accent); }
+        .btn-submit { background: var(--accent); color: #0f172a; border: none; padding: 12px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1rem; transition: opacity 0.2s; }
+        .btn-submit:hover { opacity: 0.9; }
+        .back-link { display: block; text-align: center; margin-top: 1rem; color: var(--text-muted); text-decoration: none; font-size: 0.85rem; }
+        .back-link:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>⚡ Create Escrow Wager</h1>
+        <p>Set up a new wager amount and generate participant escrow deposit addresses.</p>
+        
+        <form action="/api/v1/escrow/create" method="POST">
+            <div class="form-group">
+                <label for="wager_amount_sats">Wager Amount (Satoshis)</label>
+                <input type="number" id="wager_amount_sats" name="wager_amount_sats" required min="1000" placeholder="e.g., 50000">
+            </div>
+            <div class="form-group">
+                <label for="creator_token">Your Telegram User ID / Token</label>
+                <input type="text" id="creator_token" name="creator_token" required placeholder="e.g., 6072065878">
+            </div>
+            <div class="form-group">
+                <label for="opponent_token">Opponent Telegram User ID / Token</label>
+                <input type="text" id="opponent_token" name="opponent_token" required placeholder="e.g., 9876543210">
+            </div>
+            <button type="submit" class="btn-submit">🚀 Initialize Wager Escrow</button>
+        </form>
+        
+        <a href="/" class="return-dashboard">← Back to Live Dashboard</a>
+    </div>
+</body>
+</html>
