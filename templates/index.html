@@ -1,0 +1,300 @@
+{# 
+  Escrow Wager Dashboard Template (`templates/index.html`).
+  Linux-terminal / Hacker CRT aesthetic style.
+#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ [root@wager-gateway ~]# dashboard</title>
+    <!-- Professional Bitcoin SVG Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='16' fill='%23f7931a'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>₿</text></svg>">
+    <style>
+        :root {
+            --bg-color: #0c0c0c;
+            --panel-bg: #121212;
+            --border-color: #333333;
+            --text-main: #00ff66; /* Classic terminal green */
+            --text-muted: #666666;
+            --accent: #f7931a; /* Bitcoin orange */
+            --highlight: #00ffff; /* Cyan highlights */
+            --dim-green: #008833;
+        }
+        body {
+            font-family: "Courier New", Courier, monospace, monospace;
+            background: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 1rem;
+            text-shadow: 0 0 2px rgba(0, 255, 102, 0.4);
+        }
+        
+        /* CRT Scanline effect overlay */
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 99999;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Linux Navigation Header */
+        .global-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--panel-bg);
+            border: 1px solid var(--dim-green);
+            padding: 8px 16px;
+            border-radius: 0px;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .nav-btn {
+            background: #000;
+            border: 1px solid var(--dim-green);
+            color: var(--text-muted);
+            padding: 4px 10px;
+            text-decoration: none;
+            font-family: inherit;
+            font-size: 0.8rem;
+            transition: all 0.1s ease;
+        }
+        .nav-btn:hover {
+            border-color: var(--text-main);
+            color: var(--text-main);
+        }
+        .nav-btn.active {
+            border-color: var(--text-main);
+            color: var(--text-main);
+            background: rgba(0, 255, 102, 0.1);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px dashed var(--dim-green);
+            padding-bottom: 6px;
+        }
+        h1 {
+            color: var(--highlight);
+            font-size: 1.2rem;
+            margin: 0;
+            text-transform: uppercase;
+        }
+        .live-indicator {
+            font-size: 0.75rem;
+            color: var(--text-main);
+        }
+        
+        /* Terminal Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: var(--panel-bg);
+            border: 1px solid var(--dim-green);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8rem;
+        }
+        .tab-btn:hover {
+            color: var(--text-main);
+            border-color: var(--text-main);
+        }
+        .tab-btn.active {
+            background: var(--dim-green);
+            color: #000;
+            font-weight: bold;
+        }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            background: var(--panel-bg);
+            border: 1px solid var(--dim-green);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        th, td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+        th {
+            background: #181818;
+            color: var(--highlight);
+            font-weight: bold;
+            border-bottom: 1px solid var(--dim-green);
+        }
+        code {
+            background: #000;
+            color: var(--highlight);
+            padding: 1px 4px;
+            border: 1px solid #222;
+        }
+        .badge {
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            border: 1px solid currentColor;
+        }
+        .ACTIVE { color: #00ff66; border-color: #00ff66; }
+        .PENDING_ACCEPTANCE { color: #f7931a; border-color: #f7931a; }
+        
+        .content-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--dim-green);
+            padding: 1rem;
+            line-height: 1.5;
+            font-size: 0.85rem;
+        }
+        .content-card h3 {
+            color: var(--highlight);
+            margin-top: 0;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 4px;
+        }
+        .content-card ul { padding-left: 1.2rem; }
+        .content-card li { margin-bottom: 0.4rem; color: var(--text-muted); }
+        .content-card strong { color: var(--text-main); }
+        .contact-box {
+            background: #000;
+            border: 1px solid var(--dim-green);
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .contact-box a { color: var(--highlight); text-decoration: none; }
+    </style>
+</head>
+<body>
+    <!-- Global Navigation Bar -->
+    <nav class="global-nav">
+        <a href="/" class="nav-brand"><span>[root@gateway:~]#</span> wager_cli</a>
+        <div class="nav-links">
+            <a href="/" class="nav-btn active">./dashboard.sh</a>
+            <a href="/hub" class="nav-btn">./arena_chat.sh</a>
+        </div>
+    </nav>
+
+    <div class="header-container">
+        <h1>system status :: active wagers</h1>
+        <div class="live-indicator">[status: online]</div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('dashboard', event)">[1] active_bets.log</button>
+        <button class="tab-btn" onclick="switchTab('betting', event)">[2] protocol_rules.txt</button>
+        <button class="tab-btn" onclick="switchTab('docs', event)">[3] man_pages.md</button>
+        <button class="tab-btn" onclick="switchTab('contact', event)">[4] support.contact</button>
+    </div>
+
+    <div id="dashboard" class="tab-pane active">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>WAGER_ID</th>
+                        <th>STATE</th>
+                        <th>AMOUNT (SATS)</th>
+                        <th>ESCROW_ADDRESS</th>
+                        <th>TIMESTAMP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bet in bets %}
+                    <tr>
+                        <td><code>{{ bet.bet_id }}</code></td>
+                        <td><span class="badge {{ bet.status }}">{{ bet.status }}</span></td>
+                        <td>{{ bet.wager_amount_sats }}</td>
+                        <td><code>{{ bet.escrow_address or 'PENDING_INIT' }}</code></td>
+                        <td style="color: var(--text-muted);">{{ bet.created_at }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="betting" class="tab-pane">
+        <div class="content-card">
+            <h3>PROTOCOL SPECIFICATION :: ESCROW WAGERS</h3>
+            <p>Decentralized state machine ensuring trustless escrow settlements via multi-sig cryptographic locking.</p>
+            <ul>
+                <li><strong>Phase 01 [Init]:</strong> Challenger broadcasts wager payload. System allocates unique hash identifier and target address.</li>
+                <li><strong>Phase 02 [Fund]:</strong> Participants push exact satoshi amounts to designated escrow addresses.</li>
+                <li><strong>Phase 03 [Execute]:</strong> Automated daemons listen for mempool confirmations, shifting state from <code>PENDING_ACCEPTANCE</code> to <code>ACTIVE</code>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="docs" class="tab-pane">
+        <div class="content-card">
+            <h3>SYSTEM MANUAL :: WAGER GATEWAY API v1.1</h3>
+            <p>CLI and HTTP interface specifications for automation scripts.</p>
+            <ul>
+                <li><strong>Database Kernel (`project.db`)</strong>: SQLite3 relational store tracking table records for <code>bets</code> and <code>chat_messages</code>.</li>
+                <li><strong>Webhook Daemons</strong>: <code>POST /api/v1/escrow/deposit-webhook</code> listening for inbound blockchain state changes.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="contact" class="tab-pane">
+        <div class="content-card">
+            <h3>MAINTENANCE & SUPPORT CONSOLE</h3>
+            <p>Encountering daemon panics, failed state synchronization, or dispute arbitration requests?</p>
+            <div class="contact-box">
+                <p style="margin: 0;"><strong>Direct Administrator Channel:</strong><br>
+                Email payload routing target:<br>
+                <a href="mailto:alexdcarl@yahoo.com">alexdcarl@yahoo.com</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId, event) {
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+        setTimeout(() => {
+            if (document.getElementById('dashboard').classList.contains('active')) {
+                window.location.reload();
+            }
+        }, 10000);
+    </script>
+</body>
+</html>

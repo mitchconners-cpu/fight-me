@@ -1,0 +1,235 @@
+{# 
+  Betting Hub Template (`templates/hub.html`).
+  Linux-terminal / Hacker CRT aesthetic style with interactive chat.
+#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ [root@wager-gateway ~]# arena_chat</title>
+    <!-- Professional Bitcoin SVG Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='16' fill='%23f7931a'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>₿</text></svg>">
+    <style>
+        :root {
+            --bg-color: #0c0c0c;
+            --panel-bg: #121212;
+            --border-color: #333333;
+            --text-main: #00ff66;
+            --text-muted: #666666;
+            --accent: #f7931a;
+            --highlight: #00ffff;
+            --dim-green: #008833;
+        }
+        body {
+            font-family: "Courier New", Courier, monospace, monospace;
+            background: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 1rem;
+            text-shadow: 0 0 2px rgba(0, 255, 102, 0.4);
+        }
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 99999;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .global-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--panel-bg);
+            border: 1px solid var(--dim-green);
+            padding: 8px 16px;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .nav-links { display: flex; gap: 10px; align-items: center; }
+        .nav-btn {
+            background: #000;
+            border: 1px solid var(--dim-green);
+            color: var(--text-muted);
+            padding: 4px 10px;
+            text-decoration: none;
+            font-family: inherit;
+            font-size: 0.8rem;
+        }
+        .nav-btn:hover { border-color: var(--text-main); color: var(--text-main); }
+        .nav-btn.active { border-color: var(--text-main); color: var(--text-main); background: rgba(0, 255, 102, 0.1); }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px dashed var(--dim-green); padding-bottom: 6px; }
+        h1 { color: var(--highlight); font-size: 1.2rem; margin: 0; text-transform: uppercase; }
+        .auth-box { background: var(--panel-bg); border: 1px solid var(--dim-green); padding: 6px 12px; font-size: 0.8rem; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+        
+        .card { background: var(--panel-bg); border: 1px solid var(--dim-green); padding: 1rem; margin-bottom: 1rem; }
+        .card h3 { color: var(--highlight); margin-top: 0; font-size: 0.95rem; border-bottom: 1px dashed var(--border-color); padding-bottom: 4px; text-transform: uppercase; }
+        
+        input, textarea { width: 100%; padding: 8px; background: #000; border: 1px solid var(--dim-green); color: var(--text-main); font-family: inherit; margin-bottom: 0.75rem; box-sizing: border-box; }
+        input:focus, textarea:focus { outline: none; border-color: var(--highlight); }
+        
+        button { background: var(--dim-green); color: #000; border: none; padding: 8px 12px; font-weight: bold; cursor: pointer; font-family: inherit; width: 100%; text-transform: uppercase; font-size: 0.8rem; }
+        button:hover { background: var(--text-main); }
+        
+        .chat-box { height: 180px; overflow-y: auto; background: #000; border: 1px solid var(--border-color); padding: 8px; margin-bottom: 0.75rem; font-size: 0.8rem; }
+        .chat-msg { margin-bottom: 6px; border-bottom: 1px dashed #222; padding-bottom: 4px; }
+        .chat-sender { color: var(--highlight); font-weight: bold; }
+        
+        .badge { padding: 2px 6px; font-size: 0.7rem; font-weight: bold; border: 1px solid currentColor; }
+        .ACTIVE { color: #00ff66; }
+        .PENDING_ACCEPTANCE { color: #f7931a; }
+    </style>
+</head>
+<body>
+    <!-- Global Navigation Bar -->
+    <nav class="global-nav">
+        <a href="/" class="nav-brand"><span>[root@gateway:~]#</span> wager_cli</a>
+        <div class="nav-links">
+            <a href="/" class="nav-btn">./dashboard.sh</a>
+            <a href="/hub" class="nav-btn active">./arena_chat.sh</a>
+        </div>
+    </nav>
+
+    <div class="header">
+        <h1>[console] :: betting arena & chat daemon</h1>
+        <div class="auth-box" id="auth-status">
+            KEY: <span id="user-btc" style="color: var(--highlight);">UNAUTHORIZED</span>
+            <button onclick="authorizeBtc()" style="width: auto; padding: 2px 6px; margin-left: 6px; font-size: 0.7rem;">auth</button>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div>
+            <div class="card">
+                <h3>&gt;&gt; init_wager_session</h3>
+                <form id="create-bet-form" onsubmit="createBet(event)">
+                    <label style="font-size: 0.75rem; color: var(--text-muted);">WAGER_AMOUNT (SATOSHIS)</label>
+                    <input type="number" id="wager_amount" required placeholder="e.g., 25000">
+                    <button type="submit">[execute] create escrow</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>&gt;&gt; active_sessions_registry</h3>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    {% for bet in bets %}
+                    <div style="background: #000; border: 1px solid var(--border-color); padding: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+                        <div>
+                            <code>{{ bet.bet_id }}</code><br>
+                            <span style="color: var(--text-muted);">{{ bet.wager_amount_sats }} sats</span> | <span class="badge {{ bet.status }}">{{ bet.status }}</span>
+                        </div>
+                        <button onclick="selectBet('{{ bet.bet_id }}')" style="width: auto; padding: 4px 8px; font-size: 0.7rem;">connect</button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <h3>&gt;&gt; secure_channel [session: <span id="active-bet-id" style="color: var(--highlight);">none</span>]</h3>
+                
+                <div class="chat-box" id="chat-messages">
+                    <div style="color: var(--text-muted); text-align: center; margin-top: 50px;">// select session to stream packets</div>
+                </div>
+
+                <form id="chat-form" onsubmit="sendChatMessage(event)" style="display: none;">
+                    <textarea id="chat-input" rows="2" required placeholder="Type command/message..."></textarea>
+                    <button type="submit">[transmit] send packet</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentBtcAddress = localStorage.getItem('btc_address') || '';
+        let activeBetId = '';
+
+        if (currentBtcAddress) {
+            document.getElementById('user-btc').innerText = currentBtcAddress.substring(0, 8) + '...';
+        }
+
+        function authorizeBtc() {
+            let addr = prompt("Enter Bitcoin/Lightning Address key signature:", currentBtcAddress);
+            if (addr) {
+                localStorage.setItem('btc_address', addr);
+                currentBtcAddress = addr;
+                document.getElementById('user-btc').innerText = addr.substring(0, 8) + '...';
+            }
+        }
+
+        function selectBet(betId) {
+            activeBetId = betId;
+            document.getElementById('active-bet-id').innerText = betId;
+            document.getElementById('chat-form').style.display = 'block';
+            loadChatMessages();
+        }
+
+        async function loadChatMessages() {
+            if (!activeBetId) return;
+            try {
+                let res = await fetch(`/api/v1/chat/${activeBetId}`);
+                let data = await res.json();
+                let chatBox = document.getElementById('chat-messages');
+                chatBox.innerHTML = '';
+                if (data.messages.length === 0) {
+                    chatBox.innerHTML = '<div style="color: var(--text-muted); text-align: center;">// channel empty. broadcast packet.</div>';
+                    return;
+                }
+                data.messages.forEach(m => {
+                    chatBox.innerHTML += `<div class="chat-msg"><span class="chat-sender">${m.sender_address.substring(0,6)}...:</span> ${m.message}</div>`;
+                });
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (err) {
+                console.error("Failed to load chat", err);
+            }
+        }
+
+        async function sendChatMessage(event) {
+            event.preventDefault();
+            if (!currentBtcAddress) {
+                alert("Error: Authentication key required.");
+                authorizeBtc();
+                return;
+            }
+            if (!activeBetId) return;
+
+            let msgInput = document.getElementById('chat-input');
+            let formData = new URLSearchParams();
+            formData.append('bet_id', activeBetId);
+            formData.append('sender_address', currentBtcAddress);
+            formData.append('message', msgInput.value);
+
+            await fetch('/api/v1/chat/send', {
+                method: 'POST',
+                body: formData
+            });
+
+            msgInput.value = '';
+            loadChatMessages();
+        }
+
+        setInterval(() => {
+            if (activeBetId) loadChatMessages();
+        }, 5000);
+    </script>
+</body>
+</html>
